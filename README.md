@@ -34,7 +34,7 @@ python3 "$helper" emit complete palette-001 --name "Paper Planes" --summary "One
 
 Repeated delivery of the same completion is harmless. Closing a waiting pane hides its outstanding request. An explicit completion remains readable after its pane closes. Marking a cached result as read while offline syncs the acknowledgement on reconnect. Event summaries are stored on the project host and cached in the Mac app’s preferences.
 
-See [configuration and integrations](docs/setup.md) for SSH, WezTerm, project launch commands, Codex notifications and working with other task runners.
+See [configuration and integrations](docs/setup.md) for SSH, WezTerm, project launch commands, Codex completion notifications, automatic Claude Code permission reminders and working with other task runners.
 
 ## Verify the checkout
 

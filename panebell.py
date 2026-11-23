@@ -3,6 +3,7 @@
 import argparse
 from contextlib import closing, contextmanager
 import fcntl
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -13,6 +14,7 @@ import sqlite3
 import subprocess
 import sys
 import time
+import uuid
 import tempfile
 
 BASE = Path(os.environ.get("PANEBELL_STATE_DIR") or Path.home() / ".local/state/panebell")
@@ -144,6 +146,39 @@ def current_location():
         return {}
     row = next((p for p in panes() if p["key"].split(":")[1] == pane_id), None)
     return {"session": row["session"], "path": row["path"], "pane": row["key"]} if row else {}
+
+
+def claude_hook(event):
+    """Observe permission lifecycle without sending decisions or retaining tool input."""
+    kind, sid = event.get("hook_event_name"), event.get("session_id")
+    if not isinstance(sid, str) or not sid or kind not in (
+            "PermissionRequest", "PostToolUse", "PostToolUseFailure", "Stop", "SessionEnd"):
+        return
+    if kind != "PermissionRequest" and not (BASE / "events.sqlite3").exists():
+        return
+    location = current_location() if kind == "PermissionRequest" else {}
+    if kind == "PermissionRequest" and not location:
+        return
+    signature = hashlib.sha256(json.dumps([event.get("tool_name"), event.get("tool_input")],
+                                          sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    with database() as db:
+        db.execute("BEGIN IMMEDIATE")
+        db.execute("CREATE TABLE IF NOT EXISTS permission_waits (sid TEXT, signature TEXT, event TEXT, "
+                   "PRIMARY KEY (sid,signature))")
+        if kind == "PermissionRequest":
+            receipt = "permission:" + uuid.uuid4().hex
+            added = db.execute("INSERT OR IGNORE INTO permission_waits VALUES (?,?,?)", (sid, signature, receipt))
+            if added.rowcount:
+                tool = str(event.get("tool_name") or "tool")[:120]
+                db.execute("INSERT INTO events VALUES (?,?,?,?,?,?,?,?,0)",
+                           (receipt, "waiting", Path(location["path"]).name or "Claude Code",
+                            "Claude Code requests permission to use " + tool + ".", location["session"],
+                            location["path"], location["pane"], time.time()))
+        else:
+            where, values = ("sid=?", (sid,)) if kind in ("Stop", "SessionEnd") else ("sid=? AND signature=?", (sid,signature))
+            db.execute("UPDATE events SET state='clear' WHERE id IN (SELECT event FROM permission_waits WHERE "+where+")",
+                       values)
+            db.execute("DELETE FROM permission_waits WHERE "+where, values)
 
 
 def open_project(req):
@@ -339,7 +374,7 @@ def terminal_action(req):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="cmd", required=True)
-    for name in ("request", "serve", "codex-notify", "attach", "host-attach", "unlock"):
+    for name in ("request", "serve", "codex-notify", "claude-hook", "attach", "host-attach", "unlock"):
         p = sub.add_parser(name)
         if name == "codex-notify":
             p.add_argument("notification")
@@ -356,6 +391,9 @@ def main():
         event = current_location()
         event.update({k:v for k,v in vars(args).items() if v and k != "cmd"})
         emit(event)
+        return
+    if args.cmd == "claude-hook":
+        claude_hook(json.load(sys.stdin))
         return
     if args.cmd == "codex-notify":
         event = json.loads(args.notification)

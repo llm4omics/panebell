@@ -39,3 +39,7 @@ Quit PaneBell before updating or removing it. Run the installer again to update.
 ## Record deliberate WezTerm switches
 
 To include manual switches between PaneBell's primary WezTerm project views in **Recently opened**, copy [the optional module](../examples/wezterm-focus.lua) into your WezTerm configuration directory and load it with `require("wezterm-focus")` from your existing configuration. It notifies the running app on foreground changes. The app confirms the active tmux pane before recording it. Background title changes and side-by-side views do not affect this list.
+
+## Automatic approval reminders in Claude Code
+
+Merge the hook entries from [the settings example](../examples/claude-hooks.json) into your own Claude Code settings on the project host. Keep any hooks you already use. Start Claude Code in tmux. When it asks for tool permission, PaneBell shows an item that opens the exact pane. Tool completion, failure or session shutdown clears the matching outstanding wait. The adapter stores the tool name and a fingerprint used to match events; command arguments and tool results are not saved in the inbox. Closing a pane hides its waiting item. Decisions stay in Claude Code. [Claude Code hook reference](https://code.claude.com/docs/en/hooks#permissionrequest)

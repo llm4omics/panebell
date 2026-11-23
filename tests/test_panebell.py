@@ -125,6 +125,29 @@ class WindowTests(unittest.TestCase):
         self.assertEqual(pb.dispatch({"action":"snapshot"})["events"], [])
         self.assertEqual(pb.inbox()[0]["state"], "waiting")
 
+    def test_permission_hook_observes_only_and_clears_on_resolution(self):
+        pane = self.open()["pane"]
+        env = dict(os.environ, PANEBELL_STATE_DIR=str(pb.BASE), TMUX_PANE=pane["key"].split(":")[1])
+        cmd = [sys.executable, pb.__file__, "claude-hook"]
+        def send(kind, tool="Read"):
+            payload = dict(session_id="fictional-session", hook_event_name=kind, tool_name=tool,
+                           tool_input={"file_path":"fixture-only-input"})
+            result = subprocess.run(cmd, env=env, input=json.dumps(payload), text=True,
+                                    capture_output=True, check=True)
+            self.assertEqual(result.stdout, "")
+        send("PermissionRequest")
+        send("PermissionRequest")
+        send("PermissionRequest", "Write")
+        self.assertEqual(len(pb.inbox()), 2)
+        self.assertTrue(all("fixture-only-input" not in e["summary"] for e in pb.inbox()))
+        send("PostToolUse")
+        self.assertEqual(len(pb.inbox()), 1)
+        send("PostToolUseFailure", "Write")
+        self.assertEqual(pb.inbox(), [])
+        send("PermissionRequest")
+        send("SessionEnd")
+        self.assertEqual(pb.inbox(), [])
+
     def test_disconnected_inbox_through_cli(self):
         pane = self.open()["pane"]
         cfg = self.base / "config.json"
