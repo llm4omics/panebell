@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Platform: macOS 13+](https://img.shields.io/badge/macOS-13%2B-black.svg)](#requirements)
 
-**[English](README.md) · [简体中文](README.zh-CN.md)**
+**[English](README.md) · [简体中文](README.zh-CN.md) · [Interactive Web Demo](https://llm4omics.github.io/panebell/)**
 
 **PaneBell** puts your local or remote `tmux` projects—and their requests for your attention—in the macOS menu bar. Click a project to jump straight back to its terminal pane. When a batch run or AI coding session finishes while your Mac is asleep or offline, its completion receipt is still waiting when you reconnect.
 

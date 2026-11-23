@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Platform: macOS 13+](https://img.shields.io/badge/macOS-13%2B-black.svg)](README.md#requirements)
 
-**[English](README.md) · [简体中文](README.zh-CN.md)**
+**[English](README.md) · [简体中文](README.zh-CN.md) · [在线交互演示](https://llm4omics.github.io/panebell/)**
 
 **PaneBell** 是一个原生 macOS 菜单栏工具，用来按需打开本机或远程 SSH 主机上的 `tmux` 项目，并把**待人工确认事项**与**未读完成回执**留在菜单栏里。点一下即可回到对应终端窗格；即使任务在 Mac 合盖或断网期间跑完，重连后结果依然保留在未读列表中，直到你主动标为已读。
 

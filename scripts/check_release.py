@@ -14,7 +14,7 @@ import sys
 
 PUBLIC = set("""
 .gitattributes .github/workflows/ci.yml .gitignore AGENTS.md CONTRIBUTING.md Info.plist LICENSE README.md README.zh-CN.md
-Sources/Menu.swift Sources/Models.swift demo.sh docs/setup.md examples/claude-hooks.json examples/config.json
+Sources/Menu.swift Sources/Models.swift demo.sh docs/index.html docs/setup.md examples/claude-hooks.json examples/config.json
 examples/sample-task.sh examples/wezterm-focus.lua install.sh panebell.py scripts/build.sh scripts/check_release.py
 scripts/install-host.sh tests/test_panebell.py
 """.split())

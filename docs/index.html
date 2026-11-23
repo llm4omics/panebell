@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PaneBell — macOS Menu Bar for tmux Projects &amp; Durable Receipts</title>
+<meta name="description" content="Native macOS menu bar app for local and SSH tmux projects, observe-only Claude Code permission reminders, and durable completion receipts.">
+<style>
+:root {
+  --bg: #0b0e14;
+  --bg-card: #131822;
+  --bg-elev: #1a2130;
+  --border: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --text: #f3f5f8;
+  --muted: #9aa4b5;
+  --dim: #687387;
+  --accent: #0a84ff;
+  --orange: #ff9f0a;
+  --green: #30d158;
+  --red: #ff5f57;
+  --yellow: #febc2e;
+  --menu-bg: rgba(34, 38, 48, 0.86);
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: "SF Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  background: radial-gradient(1100px 540px at 50% -120px, rgba(10, 132, 255, 0.18), transparent 65%), var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: #5eb0ff; text-decoration: none; }
+a:hover { text-decoration: underline; }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 0 22px; }
+
+/* Top site nav */
+.site-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: -0.01em;
+}
+.brand-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--orange);
+  box-shadow: 0 0 12px rgba(255, 159, 10, 0.75);
+}
+.brand-ver {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--muted);
+}
+.nav-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.lang-toggle, .btn-ghost, .btn-primary {
+  border: 1px solid var(--border-strong);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 13px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+}
+.lang-toggle:hover, .btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.1);
+  text-decoration: none;
+}
+.btn-primary {
+  background: var(--accent);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-weight: 600;
+}
+.btn-primary:hover { background: #1f8fff; text-decoration: none; }
+
+/* Hero */
+.hero {
+  text-align: center;
+  padding: 44px 0 24px;
+}
+.hero h1 {
+  margin: 0 auto 14px;
+  max-width: 820px;
+  font-size: clamp(28px, 4.4vw, 46px);
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+}
+.hero p {
+  margin: 0 auto 22px;
+  max-width: 720px;
+  color: var(--muted);
+  font-size: clamp(15px, 1.8vw, 18px);
+}
+.hero-badges {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.pill {
+  font-size: 12px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 11px;
+}
+
+/* Scenario triggers */
+.scenario-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+}
+.scenario-label {
+  font-size: 12.5px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.scenario-btns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.sc-btn {
+  background: var(--bg-elev);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12.5px;
+  padding: 6px 11px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.sc-btn:hover {
+  background: rgba(10, 132, 255, 0.2);
+  border-color: rgba(10, 132, 255, 0.6);
+}
+.sc-btn.subtle { color: var(--muted); }
+
+/* Simulated macOS Desktop Stage */
+.desktop-stage {
+  position: relative;
+  min-height: 510px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background:
+    radial-gradient(650px 360px at 18% 20%, rgba(36, 99, 235, 0.32), transparent 65%),
+    radial-gradient(600px 380px at 84% 78%, rgba(217, 119, 6, 0.22), transparent 65%),
+    linear-gradient(160deg, #101829 0%, #0d1320 52%, #131624 100%);
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  user-select: none;
+}
+
+/* macOS Menu Bar */
+.mac-menubar {
+  height: 30px;
+  background: rgba(18, 21, 29, 0.76);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  font-size: 13px;
+  position: relative;
+  z-index: 30;
+}
+.mb-left, .mb-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.mb-apple { font-weight: 700; font-size: 14px; opacity: 0.92; }
+.mb-app { font-weight: 600; }
+.mb-dim { color: rgba(255, 255, 255, 0.65); font-size: 12.5px; }
+@media (max-width: 640px) { .mb-dim { display: none; } }
+
+.pb-status-btn {
+  position: relative;
+  padding: 2px 9px;
+  border-radius: 5px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s, color 0.15s;
+}
+.pb-status-btn.has-unread { color: var(--orange); }
+.pb-status-btn:hover, .pb-status-btn.active {
+  background: rgba(255, 255, 255, 0.16);
+}
+.coachmark {
+  position: absolute;
+  top: 36px;
+  right: 92px;
+  z-index: 25;
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 11px;
+  border-radius: 8px;
+  box-shadow: 0 8px 22px rgba(10, 132, 255, 0.45);
+  pointer-events: none;
+  animation: floaty 2s ease-in-out infinite;
+}
+.coachmark::after {
+  content: "";
+  position: absolute;
+  top: -5px;
+  right: 18px;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 6px solid var(--accent);
+}
+@keyframes floaty {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(4px); }
+}
+
+/* macOS Banner Notification Toast */
+.mac-banner {
+  position: absolute;
+  top: 40px;
+  right: 14px;
+  width: min(320px, calc(100% - 28px));
+  background: rgba(38, 43, 56, 0.92);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  padding: 10px 13px;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
+  z-index: 26;
+  cursor: pointer;
+  transition: opacity 0.22s, transform 0.22s;
+}
+.mac-banner.hidden {
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+}
+.banner-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+.banner-title { font-size: 13px; font-weight: 600; }
+.banner-body { font-size: 12px; color: rgba(255, 255, 255, 0.78); }
+
+/* Dropdown NSMenu */
+.pb-menu {
+  position: absolute;
+  top: 32px;
+  right: 72px;
+  width: 262px;
+  background: var(--menu-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 9px;
+  padding: 5px;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.58);
+  z-index: 40;
+}
+.pb-menu.hidden { display: none; }
+@media (max-width: 720px) {
+  .pb-menu { right: 10px; width: 244px; }
+}
+.menu-sep {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.12);
+  margin: 5px 6px;
+}
+.menu-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+}
+.menu-row.disabled {
+  color: rgba(255, 255, 255, 0.42);
+  cursor: default;
+  font-size: 12px;
+}
+.menu-row:not(.disabled):hover, .menu-row.open {
+  background: var(--accent);
+  color: #fff;
+}
+.menu-arrow { font-size: 10px; opacity: 0.75; margin-left: 8px; }
+.submenu {
+  display: none;
+  position: absolute;
+  top: -5px;
+  right: calc(100% + 4px);
+  width: 256px;
+  background: var(--menu-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 9px;
+  padding: 5px;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.58);
+  z-index: 45;
+}
+.menu-row.open > .submenu { display: block; }
+@media (max-width: 620px) {
+  .submenu {
+    position: static;
+    width: 100%;
+    margin-top: 4px;
+    background: rgba(15, 18, 26, 0.75);
+  }
+  .menu-row.has-sub { flex-wrap: wrap; }
+}
+
+/* Workspace Windows inside Desktop */
+.desktop-workspace {
+  padding: 22px 18px 54px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.term-win {
+  background: rgba(15, 19, 28, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+.term-win.focused {
+  border-color: rgba(10, 132, 255, 0.75);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(10, 132, 255, 0.35);
+}
+.term-bar {
+  height: 30px;
+  background: rgba(34, 39, 52, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  padding: 0 11px;
+  gap: 7px;
+}
+.dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  display: inline-block;
+  border: none;
+  padding: 0;
+}
+.dot.close { background: var(--red); cursor: pointer; }
+.dot.min { background: var(--yellow); }
+.dot.max { background: var(--green); }
+.term-title {
+  flex: 1;
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--muted);
+  font-family: var(--mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 36px;
+}
+.term-body {
+  padding: 13px 14px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: #dbe4f3;
+  min-height: 210px;
+  user-select: text;
+}
+.term-line { margin-bottom: 5px; word-break: break-word; }
+.term-prompt { color: var(--green); }
+.term-dim { color: #7e8ba3; }
+.term-warn { color: var(--orange); }
+.term-actions {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.12);
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.term-btn {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 11px;
+  border-radius: 6px;
+  border: 1px solid var(--border-strong);
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text);
+  cursor: pointer;
+}
+.term-btn.approve {
+  background: rgba(48, 209, 88, 0.18);
+  border-color: rgba(48, 209, 88, 0.55);
+  color: #7ef29a;
+}
+.term-btn.approve:hover { background: rgba(48, 209, 88, 0.28); }
+.term-btn.cancel:hover { background: rgba(255, 95, 87, 0.22); border-color: rgba(255, 95, 87, 0.5); }
+
+.empty-desktop {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 72px 20px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 14px;
+}
+
+/* Status Log Strip at bottom of stage */
+.stage-footer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(12, 15, 22, 0.86);
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+  padding: 7px 14px;
+  font-size: 12px;
+  color: var(--muted);
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.stage-log { font-family: var(--mono); color: #9ecbff; }
+
+/* Simulated NSAlert Modal */
+.modal-backdrop {
+  position: absolute;
+  inset: 30px 0 0 0;
+  background: rgba(6, 8, 14, 0.52);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 16px;
+}
+.modal-backdrop.hidden { display: none; }
+.nsalert {
+  width: min(370px, 100%);
+  background: rgba(40, 45, 58, 0.96);
+  backdrop-filter: blur(22px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 13px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+}
+.nsalert-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  margin: 0 auto 10px;
+  background: linear-gradient(145deg, #2a3550, #192033);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+.nsalert-title { font-weight: 700; font-size: 15px; margin-bottom: 6px; }
+.nsalert-body {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 16px;
+  white-space: pre-wrap;
+  user-select: text;
+}
+.nsalert-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.ns-btn {
+  width: 100%;
+  padding: 7px 12px;
+  border-radius: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.09);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.ns-btn.primary {
+  background: var(--accent);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #fff;
+  font-weight: 600;
+}
+.ns-btn:hover { filter: brightness(1.08); }
+
+/* Feature Grid & Quickstart Sections */
+.section { padding: 54px 0 12px; }
+.section h2 {
+  font-size: 24px;
+  margin: 0 0 8px;
+  letter-spacing: -0.015em;
+}
+.section-sub { color: var(--muted); margin: 0 0 24px; font-size: 15px; }
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+}
+.card h3 { font-size: 15.5px; margin: 0 0 8px; }
+.card p { font-size: 13.5px; color: var(--muted); margin: 0; }
+
+/* Code Tabs */
+.tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.tab-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.tab-btn.active {
+  background: rgba(10, 132, 255, 0.16);
+  border-color: rgba(10, 132, 255, 0.6);
+  color: #fff;
+}
+.code-box {
+  position: relative;
+  background: #0e131d;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  padding: 16px 18px;
+  overflow-x: auto;
+}
+.code-box pre {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: #dce6f7;
+  line-height: 1.6;
+}
+.copy-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.copy-btn:hover { background: rgba(255, 255, 255, 0.15); }
+
+footer {
+  margin-top: 56px;
+  padding: 26px 0 44px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--dim);
+  font-size: 13px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <nav class="site-nav">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <span>PaneBell</span>
+      <span class="brand-ver">0.1.0 · MIT</span>
+    </div>
+    <div class="nav-actions">
+      <button type="button" class="lang-toggle" id="langBtn">简体中文</button>
+      <a class="btn-ghost" href="https://github.com/llm4omics/panebell/blob/main/docs/setup.md" data-i18n="nav_docs">Setup &amp; Hooks</a>
+      <a class="btn-primary" href="https://github.com/llm4omics/panebell" data-i18n="nav_repo">View on GitHub</a>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="hero-badges">
+      <span class="pill" data-i18n="b_mac">macOS 13+ Native AppKit</span>
+      <span class="pill" data-i18n="b_ssh">Local &amp; OpenSSH tmux</span>
+      <span class="pill" data-i18n="b_ai">Claude Code &amp; Codex Ready</span>
+      <span class="pill" data-i18n="b_zero">Zero Daemon · Zero Cloud</span>
+    </div>
+    <h1 data-i18n="hero_title">Your tmux projects and durable receipts in the macOS menu bar.</h1>
+    <p data-i18n="hero_sub">Jump straight back to the exact pane asking for approval. When a long run finishes while your Mac is away, its completion summary is still waiting when you reconnect.</p>
+  </header>
+
+  <div class="scenario-bar">
+    <span class="scenario-label" data-i18n="sc_label">Interactive Playground — trigger a scenario or click the menu bar:</span>
+    <div class="scenario-btns">
+      <button type="button" class="sc-btn" id="scClaude" data-i18n="sc_claude">+ Claude Code Permission</button>
+      <button type="button" class="sc-btn" id="scOffline" data-i18n="sc_offline">+ Offline Completion Receipt</button>
+      <button type="button" class="sc-btn" id="scSplit" data-i18n="sc_split">Open Side-by-Side View</button>
+      <button type="button" class="sc-btn subtle" id="scReset" data-i18n="sc_reset">Reset</button>
+    </div>
+  </div>
+
+  <!-- Simulated macOS Desktop -->
+  <section class="desktop-stage" id="desktopStage" aria-label="Interactive PaneBell macOS simulator">
+    <div class="mac-menubar">
+      <div class="mb-left">
+        <span class="mb-apple">&#63743;</span>
+        <span class="mb-app" id="mbFocusedApp">Terminal</span>
+        <span class="mb-dim">Shell</span>
+        <span class="mb-dim">Window</span>
+      </div>
+      <div class="mb-right">
+        <button type="button" class="pb-status-btn has-unread" id="pbStatusBtn">PaneBell · 2</button>
+        <span class="mb-dim" id="mbClock">Mon 09:41</span>
+      </div>
+    </div>
+
+    <div class="coachmark" id="coachmark" data-i18n="coach">Click "PaneBell · 2" in the menu bar</div>
+
+    <div class="mac-banner hidden" id="macBanner">
+      <div class="banner-head"><span>PANEBELL</span><span data-i18n="now">now</span></div>
+      <div class="banner-title" id="bannerTitle">Paper Planes</div>
+      <div class="banner-body" id="bannerBody">Waiting for your attention</div>
+    </div>
+
+    <div class="pb-menu hidden" id="pbMenu" role="menu"></div>
+
+    <div class="desktop-workspace" id="workspace"></div>
+
+    <div class="modal-backdrop hidden" id="modalBackdrop">
+      <div class="nsalert" role="dialog" aria-modal="true">
+        <div class="nsalert-icon">&#128276;</div>
+        <div class="nsalert-title" id="alertTitle"></div>
+        <div class="nsalert-body" id="alertBody"></div>
+        <div class="nsalert-btns" id="alertBtns"></div>
+      </div>
+    </div>
+
+    <div class="stage-footer">
+      <span data-i18n="stage_note">Fictional sandbox simulation mirroring Sources/Menu.swift &amp; panebell.py</span>
+      <span class="stage-log" id="stageLog">inbox: 1 waiting, 1 unread completion</span>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2 data-i18n="sec_why">Built for long-running terminal &amp; AI workflows</h2>
+    <p class="section-sub" data-i18n="sec_why_sub">No background web server, no database ports, and no LLM polling loops.</p>
+    <div class="grid-4">
+      <div class="card">
+        <h3 data-i18n="c1_t">Independent tmux Views</h3>
+        <p data-i18n="c1_b">Reuses matching windows or opens an isolated client view (pb-view-…) so side-by-side windows inspect different panes of the same session without switching each other.</p>
+      </div>
+      <div class="card">
+        <h3 data-i18n="c2_t">Durable SQLite Receipts</h3>
+        <p data-i18n="c2_b">Transient desktop banners vanish. Explicit completions persist in events.sqlite3 on the host until marked as read, syncing offline acknowledgements on reconnect.</p>
+      </div>
+      <div class="card">
+        <h3 data-i18n="c3_t">Honest Lifecycle States</h3>
+        <p data-i18n="c3_b">Closing a waiting pane hides its stale request instead of inventing a fake completion. Replayed notifications with the same run ID deduplicate cleanly.</p>
+      </div>
+      <div class="card">
+        <h3 data-i18n="c4_t">Observe-Only AI Hooks</h3>
+        <p data-i18n="c4_b">Surfaces Claude Code PermissionRequest prompts and Codex turn completions. PaneBell jumps to your runner—it never auto-grants permissions or stores tool inputs.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2 data-i18n="sec_qs">Get started in a minute</h2>
+    <p class="section-sub" data-i18n="sec_qs_sub">Distributed as clean, auditable MIT source code. Compiles locally with Xcode Command Line Tools.</p>
+    <div class="tabs" id="codeTabs">
+      <button type="button" class="tab-btn active" data-tab="demo" data-i18n="t_demo">1. Try In-Memory Demo</button>
+      <button type="button" class="tab-btn" data-tab="install" data-i18n="t_install">2. Install on Mac</button>
+      <button type="button" class="tab-btn" data-tab="emit" data-i18n="t_emit">3. Emit Events</button>
+      <button type="button" class="tab-btn" data-tab="claude" data-i18n="t_claude">4. Claude Code &amp; SSH</button>
+    </div>
+    <div class="code-box">
+      <button type="button" class="copy-btn" id="copyBtn" data-i18n="copy">Copy</button>
+      <pre id="codeView"></pre>
+    </div>
+  </section>
+
+  <footer>
+    <span>MIT License · Copyright (c) 2026 PaneBell contributors</span>
+    <span>
+      <a href="https://github.com/llm4omics/panebell">GitHub</a> ·
+      <a href="https://github.com/llm4omics/panebell/blob/main/README.md">README</a> ·
+      <a href="https://github.com/llm4omics/panebell/blob/main/README.zh-CN.md">简体中文文档</a> ·
+      <a href="https://github.com/llm4omics/panebell/releases">Releases</a>
+    </span>
+  </footer>
+</div>
+
+<script>
+(function () {
+  const I18N = {
+    en: {
+      toggle: "简体中文",
+      nav_docs: "Setup & Hooks",
+      nav_repo: "View on GitHub",
+      b_mac: "macOS 13+ Native AppKit",
+      b_ssh: "Local & OpenSSH tmux",
+      b_ai: "Claude Code & Codex Ready",
+      b_zero: "Zero Daemon · Zero Cloud",
+      hero_title: "Your tmux projects and durable receipts in the macOS menu bar.",
+      hero_sub: "Jump straight back to the exact pane asking for approval. When a long run finishes while your Mac is away, its completion summary is still waiting when you reconnect.",
+      sc_label: "Interactive Playground — trigger a scenario or click the menu bar:",
+      sc_claude: "+ Claude Code Permission",
+      sc_offline: "+ Offline Completion Receipt",
+      sc_split: "Open Side-by-Side View",
+      sc_reset: "Reset",
+      coach: "Click \"PaneBell · 2\" in the menu bar",
+      now: "now",
+      stage_note: "Fictional sandbox simulation mirroring Sources/Menu.swift & panebell.py",
+      sec_why: "Built for long-running terminal & AI workflows",
+      sec_why_sub: "No background web server, no database ports, and no LLM polling loops.",
+      c1_t: "Independent tmux Views",
+      c1_b: "Reuses matching windows or opens an isolated client view (pb-view-…) so side-by-side windows inspect different panes of the same session without switching each other.",
+      c2_t: "Durable SQLite Receipts",
+      c2_b: "Transient desktop banners vanish. Explicit completions persist in events.sqlite3 on the host until marked as read, syncing offline acknowledgements on reconnect.",
+      c3_t: "Honest Lifecycle States",
+      c3_b: "Closing a waiting pane hides its stale request instead of inventing a fake completion. Replayed notifications with the same run ID deduplicate cleanly.",
+      c4_t: "Observe-Only AI Hooks",
+      c4_b: "Surfaces Claude Code PermissionRequest prompts and Codex turn completions. PaneBell jumps to your runner—it never auto-grants permissions or stores tool inputs.",
+      sec_qs: "Get started in a minute",
+      sec_qs_sub: "Distributed as clean, auditable MIT source code. Compiles locally with Xcode Command Line Tools.",
+      t_demo: "1. Try In-Memory Demo",
+      t_install: "2. Install on Mac",
+      t_emit: "3. Emit Events",
+      t_claude: "4. Claude Code & SSH",
+      copy: "Copy",
+      copied: "Copied",
+      empty_ws: "All terminal windows closed. Click \"PaneBell\" in the menu bar to reopen a project or read durable completion receipts."
+    },
+    zh: {
+      toggle: "English",
+      nav_docs: "配置与钩子说明",
+      nav_repo: "GitHub 仓库",
+      b_mac: "macOS 13+ 原生 AppKit",
+      b_ssh: "支持本机与远程 SSH tmux",
+      b_ai: "适配 Claude Code 与 Codex",
+      b_zero: "零常驻守护 · 零模型轮询",
+      hero_title: "把 tmux 项目入口与持久化回执放进 macOS 菜单栏。",
+      hero_sub: "点一下回到请求授权的准确终端窗格；即使任务在 Mac 合盖离线期间跑完，重连后结果依然保留在未读收件箱，直到你主动标为已读。",
+      sc_label: "在线交互演练场 — 点击下方场景按钮，或直接点顶部菜单栏：",
+      sc_claude: "+ 模拟 Claude Code 请求授权",
+      sc_offline: "+ 模拟断线期间任务完成",
+      sc_split: "打开并排独立 tmux 视图",
+      sc_reset: "重置演练",
+      coach: "点击右上角菜单栏「PaneBell · 2」体验",
+      now: "刚刚",
+      stage_note: "纯虚构沙盒仿真，状态机与菜单结构严格对应 Sources/Menu.swift 与 panebell.py",
+      sec_why: "专为长耗时终端与 AI 编程任务设计",
+      sec_why_sub: "不启 HTTP 服务、不暴露端口、不挂后台模型轮询消耗 Token。",
+      c1_t: "独立 tmux 视图，并排不抢焦点",
+      c1_b: "优先复用匹配窗口；选择 Open side by side 会挂接独立客户端会话（pb-view-…），两个窗口同时查看同一会话的不同窗格互不干扰。",
+      c2_t: "SQLite 持久化回执，断线可补收",
+      c2_b: "系统弹窗转瞬即逝；PaneBell 将显式完成摘要保存在主机端 events.sqlite3，直到标为已读，离线已读确认重连后自动同步。",
+      c3_t: "诚实状态机，绝不臆测成功",
+      c3_b: "关掉等待确认的窗格会自动隐藏过期提醒，而不会伪造完成状态；同一运行 ID 重复投递自动幂等去重。",
+      c4_t: "仅观察、不越权的 AI 钩子",
+      c4_b: "支持 Claude Code PermissionRequest 提醒与 Codex 完成通知，点击直达原窗格决策——绝不代发授权决定，也不落盘工具参数明文。",
+      sec_qs: "一分钟快速上手",
+      sec_qs_sub: "以纯源码 MIT 许可分发，使用本机 Xcode Command Line Tools 编译并完成 ad hoc 签名。",
+      t_demo: "1. 30 秒纯内存体验",
+      t_install: "2. 安装到 Mac",
+      t_emit: "3. 上报任务状态",
+      t_claude: "4. Claude 钩子与远程 SSH",
+      copy: "复制",
+      copied: "已复制",
+      empty_ws: "当前终端窗口已全部关闭。点击顶部菜单栏「PaneBell」仍可阅读持久化完成回执或重新打开项目。"
+    }
+  };
+
+  const SNIPPETS = {
+    demo: [
+      "git clone https://github.com/llm4omics/panebell.git",
+      "cd panebell",
+      "# Memory-only demo: requires no tmux server, SSH key, or model account",
+      "./demo.sh"
+    ].join("\n"),
+    install: [
+      "# Build locally with swiftc & install to ~/Applications/PaneBell.app",
+      "./install.sh",
+      "open \"$HOME/Applications/PaneBell.app\"",
+      "",
+      "# On your local or remote SSH project host:",
+      "./scripts/install-host.sh"
+    ].join("\n"),
+    emit: [
+      "helper=\"$HOME/.local/lib/panebell/panebell.py\"",
+      "",
+      "# 1. Request human attention inside a tmux pane:",
+      "python3 \"$helper\" emit waiting palette-001 \\",
+      "  --name \"Paper Planes\" --summary \"Check the colour list?\"",
+      "",
+      "# 2. Record a durable completion receipt:",
+      "python3 \"$helper\" emit complete palette-001 \\",
+      "  --name \"Paper Planes\" --summary \"One duplicate colour: teal.\""
+    ].join("\n"),
+    claude: [
+      "// ~/.config/panebell/config.json (fictional SSH host alias + projects)",
+      "{",
+      "  \"sshHost\": \"studio-box\",",
+      "  \"terminal\": \"terminal\",",
+      "  \"projects\": [",
+      "    {\"name\": \"Paper Planes\", \"session\": \"sketchbook\", \"path\": \"~/Sandbox/paper-planes\"},",
+      "    {\"name\": \"Lantern Atlas\", \"session\": \"sketchbook\", \"path\": \"~/Sandbox/lantern-atlas\"}",
+      "  ]",
+      "}",
+      "",
+      "# Merge examples/claude-hooks.json into Claude Code settings on the host",
+      "# to surface PermissionRequest reminders automatically."
+    ].join("\n")
+  };
+
+  let lang = "en";
+  let currentTab = "demo";
+  let seq = 10;
+
+  const PROJECTS = [
+    { name: "Paper Planes", session: "sketchbook", path: "~/Sandbox/paper-planes" },
+    { name: "Lantern Atlas", session: "sketchbook", path: "~/Sandbox/lantern-atlas" }
+  ];
+
+  let state = {};
+
+  function initialState() {
+    state = {
+      menuOpen: false,
+      focusedWinId: "win-1",
+      pinned: [{ name: "Paper Planes", session: "sketchbook", path: "~/Sandbox/paper-planes" }],
+      recent: [{ name: "Paper Planes", session: "sketchbook", path: "~/Sandbox/paper-planes" }],
+      panes: [
+        {
+          winId: "win-1",
+          key: "410:%1:412",
+          session: "sketchbook",
+          target: "sketchbook:0.0",
+          view: "pb-view-8f3a19c2-sketchbook",
+          name: "Paper Planes",
+          path: "~/Sandbox/paper-planes",
+          pendingEventId: "sample-palette-001",
+          lines: [
+            { cls: "term-prompt", text: "$ sh examples/sample-task.sh" },
+            { cls: "term-dim", text: "[panebell] emit waiting sample-palette-001" },
+            { cls: "term-warn", text: "Colour list: amber, teal, teal. Check the list? [y/N]" }
+          ]
+        }
+      ],
+      events: [
+        {
+          id: "sample-palette-001",
+          state: "waiting",
+          name: "Paper Planes",
+          summary: "Check the fictional colour list (amber, teal, teal) for duplicate entries?",
+          session: "sketchbook",
+          path: "~/Sandbox/paper-planes",
+          pane: "410:%1:412",
+          seen: false
+        },
+        {
+          id: "atlas-nightly-04",
+          state: "complete",
+          name: "Lantern Atlas",
+          summary: "Finished while Mac was asleep: indexed 12 fictional star charts, 0 broken links.",
+          session: "sketchbook",
+          path: "~/Sandbox/lantern-atlas",
+          pane: "",
+          seen: false
+        }
+      ]
+    };
+  }
+
+  function visibleEvents() {
+    const liveKeys = new Set(state.panes.map(p => p.key));
+    return state.events.filter(e => {
+      if (e.seen || e.state === "clear") return false;
+      if (e.state === "waiting" && e.pane && !liveKeys.has(e.pane)) return false;
+      return true;
+    });
+  }
+
+  function setLog(msg) {
+    document.getElementById("stageLog").textContent = msg;
+  }
+
+  let bannerTimer = null;
+  function showBanner(title, body) {
+    const el = document.getElementById("macBanner");
+    document.getElementById("bannerTitle").textContent = title;
+    document.getElementById("bannerBody").textContent = body;
+    el.classList.remove("hidden");
+    clearTimeout(bannerTimer);
+    bannerTimer = setTimeout(() => el.classList.add("hidden"), 3800);
+  }
+
+  function visitProject(proj) {
+    state.recent = [proj, ...state.recent.filter(p => !(p.session === proj.session && p.path === proj.path))].slice(0, 8);
+  }
+
+  function togglePin(proj) {
+    const idx = state.pinned.findIndex(p => p.session === proj.session && p.path === proj.path);
+    if (idx >= 0) {
+      state.pinned.splice(idx, 1);
+      setLog("unpinned " + proj.name);
+    } else {
+      state.pinned.push(proj);
+      setLog("pinned " + proj.name + " to menu");
+    }
+    renderAll();
+  }
+
+  function openProject(proj, opts) {
+    opts = opts || {};
+    state.menuOpen = false;
+    document.getElementById("coachmark").style.display = "none";
+    let match = null;
+    if (!opts.separate) {
+      if (opts.exact) {
+        match = state.panes.find(p => p.key === opts.exact);
+      } else {
+        match = state.panes.find(p => p.session === proj.session && p.path === proj.path);
+      }
+    }
+    if (match) {
+      state.focusedWinId = match.winId;
+      visitProject(proj);
+      setLog("focused existing window " + match.target + " (" + match.path + ")");
+      renderAll();
+      return;
+    }
+    seq += 1;
+    const winIdx = state.panes.length;
+    const client = opts.separate ? "side" + seq + "ef" : "8f3a19c2";
+    const newPane = {
+      winId: "win-" + seq,
+      key: (500 + seq) + ":%" + seq + ":" + (600 + seq),
+      session: proj.session,
+      target: proj.session + ":" + winIdx + ".0",
+      view: "pb-view-" + client + "-" + proj.session,
+      name: proj.name,
+      path: proj.path,
+      pendingEventId: null,
+      lines: [
+        { cls: "term-dim", text: "attached " + ("pb-view-" + client + "-" + proj.session) + " -> " + proj.session + ":" + winIdx + ".0" },
+        { cls: "term-prompt", text: proj.path + " $ _" }
+      ]
+    };
+    state.panes.push(newPane);
+    state.focusedWinId = newPane.winId;
+    visitProject(proj);
+    setLog((opts.separate ? "opened side-by-side view " : "opened project window ") + newPane.view);
+    renderAll();
+  }
+
+  function resolvePaneTask(pane, approved) {
+    const ev = state.events.find(e => e.id === pane.pendingEventId);
+    pane.pendingEventId = null;
+    if (approved) {
+      pane.lines.push({ cls: "term-prompt", text: "> y" });
+      if (ev && ev.id.indexOf("permission:") === 0) {
+        pane.lines.push({ cls: "term-dim", text: "[claude-hook] PostToolUse -> waiting prompt cleared" });
+        ev.state = "clear";
+        setLog("Claude Code permission resolved in terminal -> waiting item cleared");
+      } else if (ev) {
+        pane.lines.push({ cls: "term-dim", text: "Duplicate colour: teal" });
+        pane.lines.push({ cls: "term-dim", text: "[panebell] emit complete " + ev.id });
+        ev.state = "complete";
+        ev.summary = "3 fictional colours checked, 1 duplicate colour: teal.";
+        showBanner(ev.name, "Completed · open PaneBell to read");
+        setLog("task completed -> durable receipt saved in Unread completions");
+      }
+    } else {
+      pane.lines.push({ cls: "term-warn", text: "> n (cancelled)" });
+      if (ev) ev.state = "clear";
+      setLog("request cancelled -> emit clear removed waiting item without fake completion");
+    }
+    renderAll();
+  }
+
+  function closeWindow(winId) {
+    const idx = state.panes.findIndex(p => p.winId === winId);
+    if (idx < 0) return;
+    const removed = state.panes.splice(idx, 1)[0];
+    if (state.focusedWinId === winId) {
+      state.focusedWinId = state.panes[0] ? state.panes[0].winId : "";
+    }
+    if (removed.pendingEventId) {
+      setLog("closed waiting pane " + removed.target + " -> stale wait hidden automatically");
+    } else {
+      setLog("closed window " + removed.target + " (explicit completions remain in inbox)");
+    }
+    renderAll();
+  }
+
+  function openModal(title, body, buttons) {
+    state.menuOpen = false;
+    renderMenu();
+    document.getElementById("alertTitle").textContent = title;
+    document.getElementById("alertBody").textContent = body;
+    const wrap = document.getElementById("alertBtns");
+    wrap.innerHTML = "";
+    buttons.forEach((b, i) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "ns-btn" + (i === 0 ? " primary" : "");
+      btn.textContent = b.label;
+      btn.addEventListener("click", () => {
+        document.getElementById("modalBackdrop").classList.add("hidden");
+        if (b.onClick) b.onClick();
+      });
+      wrap.appendChild(btn);
+    });
+    document.getElementById("modalBackdrop").classList.remove("hidden");
+  }
+
+  function inspectNotice(n) {
+    const buttons = [];
+    const proj = n.session && n.path ? { name: n.name, session: n.session, path: n.path } : null;
+    if (n.state === "complete") {
+      buttons.push({
+        label: "Mark as read",
+        onClick: () => {
+          n.seen = true;
+          setLog("marked " + n.id + " as read (synced to events.sqlite3)");
+          renderAll();
+        }
+      });
+    }
+    if (proj) {
+      buttons.push({
+        label: n.pane ? "Open original window" : "Open project",
+        onClick: () => openProject(proj, { exact: n.pane || null })
+      });
+    }
+    buttons.push({ label: "Close" });
+    openModal(n.name, n.summary, buttons);
+  }
+
+  function makeRow(label, opts) {
+    opts = opts || {};
+    const row = document.createElement("div");
+    row.className = "menu-row" + (opts.disabled ? " disabled" : "") + (opts.submenu ? " has-sub" : "");
+    const text = document.createElement("span");
+    text.textContent = label;
+    row.appendChild(text);
+    if (opts.submenu) {
+      const arrow = document.createElement("span");
+      arrow.className = "menu-arrow";
+      arrow.textContent = "▶";
+      row.appendChild(arrow);
+      row.appendChild(opts.submenu);
+      const openExclusive = () => {
+        Array.from(row.parentElement.children).forEach(sib => {
+          if (sib !== row) sib.classList.remove("open");
+        });
+        row.classList.add("open");
+      };
+      row.addEventListener("mouseenter", openExclusive);
+      row.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const wasOpen = row.classList.contains("open");
+        Array.from(row.parentElement.children).forEach(sib => sib.classList.remove("open"));
+        if (!wasOpen) row.classList.add("open");
+      });
+    } else if (!opts.disabled && opts.onClick) {
+      row.addEventListener("click", (e) => {
+        e.stopPropagation();
+        opts.onClick();
+      });
+    }
+    return row;
+  }
+
+  function buildProjectSubmenu(p, pane) {
+    const sub = document.createElement("div");
+    sub.className = "submenu";
+    sub.appendChild(makeRow(p.path, { disabled: true }));
+    sub.appendChild(makeRow("Open window", {
+      onClick: () => openProject(p, { exact: pane ? pane.key : null })
+    }));
+    sub.appendChild(makeRow("Open side by side", {
+      onClick: () => openProject(p, { exact: pane ? pane.key : null, separate: true })
+    }));
+    const isPinned = state.pinned.some(x => x.session === p.session && x.path === p.path);
+    sub.appendChild(makeRow(isPinned ? "Unpin" : "Pin to menu", {
+      onClick: () => { state.menuOpen = false; togglePin(p); }
+    }));
+    sub.appendChild(makeRow("Reveal in Finder", {
+      onClick: () => {
+        visitProject(p);
+        openModal("Finder (Simulated)", "Opened local directory " + p.path + " in macOS Finder.", [{ label: "OK" }]);
+        renderAll();
+      }
+    }));
+    sub.appendChild(makeRow("Open in VS Code", {
+      onClick: () => {
+        visitProject(p);
+        openModal("Visual Studio Code (Simulated)", "Launched code " + p.path, [{ label: "OK" }]);
+        renderAll();
+      }
+    }));
+    sub.appendChild(makeRow("Copy project path", {
+      onClick: () => {
+        state.menuOpen = false;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(p.path).catch(() => {});
+        }
+        setLog("copied path to clipboard: " + p.path);
+        renderAll();
+      }
+    }));
+    return sub;
+  }
+
+  function renderMenu() {
+    const btn = document.getElementById("pbStatusBtn");
+    const menu = document.getElementById("pbMenu");
+    const vis = visibleEvents();
+    const count = vis.length;
+    btn.textContent = "PaneBell" + (count > 0 ? " · " + count : "");
+    btn.classList.toggle("has-unread", count > 0);
+    btn.classList.toggle("active", state.menuOpen);
+    menu.classList.toggle("hidden", !state.menuOpen);
+    if (!state.menuOpen) return;
+
+    menu.innerHTML = "";
+    [
+      ["waiting", "Waiting for you"],
+      ["complete", "Unread completions"]
+    ].forEach(([kind, label]) => {
+      const list = vis.filter(e => e.state === kind);
+      if (list.length > 0) {
+        const sub = document.createElement("div");
+        sub.className = "submenu";
+        list.forEach(item => {
+          sub.appendChild(makeRow(item.name, { onClick: () => inspectNotice(item) }));
+        });
+        menu.appendChild(makeRow(label + " (" + list.length + ")", { submenu: sub }));
+      }
+    });
+
+    [
+      ["Pinned", state.pinned],
+      ["Recently opened", state.recent],
+      ["Projects", PROJECTS]
+    ].forEach(([title, items]) => {
+      const sub = document.createElement("div");
+      sub.className = "submenu";
+      if (items.length === 0) {
+        sub.appendChild(makeRow("None yet", { disabled: true }));
+      } else {
+        items.forEach(p => {
+          sub.appendChild(makeRow(p.name + " · " + p.session, { submenu: buildProjectSubmenu(p, null) }));
+        });
+      }
+      menu.appendChild(makeRow(title, { submenu: sub }));
+    });
+
+    const liveSub = document.createElement("div");
+    liveSub.className = "submenu";
+    if (state.panes.length === 0) {
+      liveSub.appendChild(makeRow("None yet", { disabled: true }));
+    } else {
+      state.panes.forEach(pane => {
+        const p = { name: pane.name, session: pane.session, path: pane.path };
+        liveSub.appendChild(makeRow(pane.name + " · " + pane.target, { submenu: buildProjectSubmenu(p, pane) }));
+      });
+    }
+    menu.appendChild(makeRow("Live windows (" + state.panes.length + ")", { submenu: liveSub }));
+
+    const sep = document.createElement("div");
+    sep.className = "menu-sep";
+    menu.appendChild(sep);
+
+    menu.appendChild(makeRow("Refresh", {
+      onClick: () => {
+        state.menuOpen = false;
+        setLog("snapshot synced: " + vis.length + " active notice(s), " + state.panes.length + " live pane(s)");
+        renderAll();
+      }
+    }));
+    menu.appendChild(makeRow("Open settings…", {
+      onClick: () => {
+        openModal(
+          "~/.config/panebell/config.json",
+          "{\n  \"sshHost\": \"\",\n  \"terminal\": \"terminal\",\n  \"projects\": [\n    {\"name\": \"Paper Planes\", \"session\": \"sketchbook\", \"path\": \"~/Sandbox/paper-planes\"},\n    {\"name\": \"Lantern Atlas\", \"session\": \"sketchbook\", \"path\": \"~/Sandbox/lantern-atlas\"}\n  ]\n}",
+          [{ label: "Close" }]
+        );
+      }
+    }));
+    menu.appendChild(makeRow("Reset demo playground", {
+      onClick: () => {
+        initialState();
+        setLog("playground reset to initial state");
+        renderAll();
+      }
+    }));
+  }
+
+  function renderWorkspace() {
+    const ws = document.getElementById("workspace");
+    ws.innerHTML = "";
+    if (state.panes.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "empty-desktop";
+      empty.textContent = I18N[lang].empty_ws;
+      ws.appendChild(empty);
+      document.getElementById("mbFocusedApp").textContent = "Finder";
+      return;
+    }
+    const focused = state.panes.find(p => p.winId === state.focusedWinId) || state.panes[0];
+    document.getElementById("mbFocusedApp").textContent = "Terminal — " + focused.target;
+
+    state.panes.forEach(pane => {
+      const win = document.createElement("div");
+      win.className = "term-win" + (pane.winId === state.focusedWinId ? " focused" : "");
+      win.addEventListener("click", () => {
+        state.focusedWinId = pane.winId;
+        renderWorkspace();
+      });
+
+      const bar = document.createElement("div");
+      bar.className = "term-bar";
+      const closeBtn = document.createElement("button");
+      closeBtn.type = "button";
+      closeBtn.className = "dot close";
+      closeBtn.title = "Close terminal window";
+      closeBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        closeWindow(pane.winId);
+      });
+      const minDot = document.createElement("span");
+      minDot.className = "dot min";
+      const maxDot = document.createElement("span");
+      maxDot.className = "dot max";
+      const title = document.createElement("div");
+      title.className = "term-title";
+      title.textContent = pane.view + " (" + pane.target + " · " + pane.path + ")";
+      bar.append(closeBtn, minDot, maxDot, title);
+
+      const body = document.createElement("div");
+      body.className = "term-body";
+      pane.lines.forEach(l => {
+        const line = document.createElement("div");
+        line.className = "term-line " + l.cls;
+        line.textContent = l.text;
+        body.appendChild(line);
+      });
+
+      if (pane.pendingEventId) {
+        const actions = document.createElement("div");
+        actions.className = "term-actions";
+        const yes = document.createElement("button");
+        yes.type = "button";
+        yes.className = "term-btn approve";
+        yes.textContent = pane.pendingEventId.indexOf("permission:") === 0
+          ? (lang === "zh" ? "在终端允许本次工具调用 (y)" : "Allow tool in runner (y)")
+          : (lang === "zh" ? "输入 y 确认检查并写入完成回执" : "Type y (Approve & Complete)");
+        yes.addEventListener("click", (e) => {
+          e.stopPropagation();
+          resolvePaneTask(pane, true);
+        });
+        const no = document.createElement("button");
+        no.type = "button";
+        no.className = "term-btn cancel";
+        no.textContent = lang === "zh" ? "输入 n 取消 (emit clear)" : "Type n (Cancel / Clear)";
+        no.addEventListener("click", (e) => {
+          e.stopPropagation();
+          resolvePaneTask(pane, false);
+        });
+        actions.append(yes, no);
+        body.appendChild(actions);
+      }
+
+      win.append(bar, body);
+      ws.appendChild(win);
+    });
+  }
+
+  function renderI18n() {
+    const dict = I18N[lang];
+    document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+    document.getElementById("langBtn").textContent = dict.toggle;
+    document.querySelectorAll("[data-i18n]").forEach(el => {
+      const key = el.getAttribute("data-i18n");
+      if (dict[key]) el.textContent = dict[key];
+    });
+    document.getElementById("codeView").textContent = SNIPPETS[currentTab];
+  }
+
+  function renderAll() {
+    renderI18n();
+    renderMenu();
+    renderWorkspace();
+  }
+
+  // Event bindings
+  document.getElementById("pbStatusBtn").addEventListener("click", (e) => {
+    e.stopPropagation();
+    document.getElementById("coachmark").style.display = "none";
+    state.menuOpen = !state.menuOpen;
+    renderMenu();
+  });
+
+  document.getElementById("macBanner").addEventListener("click", (e) => {
+    e.stopPropagation();
+    document.getElementById("macBanner").classList.add("hidden");
+    state.menuOpen = true;
+    renderMenu();
+  });
+
+  document.addEventListener("click", () => {
+    if (state.menuOpen) {
+      state.menuOpen = false;
+      renderMenu();
+    }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      state.menuOpen = false;
+      document.getElementById("modalBackdrop").classList.add("hidden");
+      renderMenu();
+    }
+  });
+
+  document.getElementById("langBtn").addEventListener("click", () => {
+    lang = lang === "en" ? "zh" : "en";
+    renderAll();
+  });
+
+  // Scenario buttons
+  document.getElementById("scClaude").addEventListener("click", () => {
+    const proj = PROJECTS[1];
+    let pane = state.panes.find(p => p.path === proj.path);
+    if (!pane) {
+      openProject(proj);
+      pane = state.panes.find(p => p.path === proj.path);
+    }
+    seq += 1;
+    const id = "permission:claude-" + seq;
+    pane.pendingEventId = id;
+    pane.lines.push({ cls: "term-prompt", text: "$ claude" });
+    pane.lines.push({ cls: "term-warn", text: "Claude Code asks permission to run Bash (tool input stays out of inbox)." });
+    state.events.unshift({
+      id: id,
+      state: "waiting",
+      name: "lantern-atlas",
+      summary: "Claude Code requests permission to use Bash.",
+      session: pane.session,
+      path: pane.path,
+      pane: pane.key,
+      seen: false
+    });
+    showBanner("lantern-atlas", "Waiting for your attention");
+    setLog("claude-hook PermissionRequest -> added observe-only wait for " + pane.target);
+    renderAll();
+  });
+
+  document.getElementById("scOffline").addEventListener("click", () => {
+    seq += 1;
+    const id = "codex:turn-" + seq;
+    state.events.unshift({
+      id: id,
+      state: "complete",
+      name: "Paper Planes",
+      summary: "Codex turn completed while Mac was disconnected: verified 4 fictional origami folding steps.",
+      session: "sketchbook",
+      path: "~/Sandbox/paper-planes",
+      pane: "",
+      seen: false
+    });
+    showBanner("Paper Planes", "Completed · open PaneBell to read");
+    setLog("reconnected -> fetched durable completion " + id + " from events.sqlite3");
+    renderAll();
+  });
+
+  document.getElementById("scSplit").addEventListener("click", () => {
+    openProject(PROJECTS[1], { separate: true });
+  });
+
+  document.getElementById("scReset").addEventListener("click", () => {
+    initialState();
+    document.getElementById("coachmark").style.display = "";
+    setLog("inbox: 1 waiting, 1 unread completion");
+    renderAll();
+  });
+
+  // Code tabs & copy
+  document.getElementById("codeTabs").addEventListener("click", (e) => {
+    const btn = e.target.closest(".tab-btn");
+    if (!btn) return;
+    currentTab = btn.getAttribute("data-tab");
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b === btn));
+    document.getElementById("codeView").textContent = SNIPPETS[currentTab];
+  });
+
+  document.getElementById("copyBtn").addEventListener("click", () => {
+    const text = SNIPPETS[currentTab];
+    const btn = document.getElementById("copyBtn");
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).catch(() => {});
+    }
+    btn.textContent = I18N[lang].copied;
+    setTimeout(() => { btn.textContent = I18N[lang].copy; }, 1400);
+  });
+
+  initialState();
+  renderAll();
+})();
+</script>
+</body>
+</html>
