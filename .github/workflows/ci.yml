@@ -1,0 +1,22 @@
+name: Verify PaneBell
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check release inventory
+        run: python3 scripts/check_release.py HEAD --history
+      - name: Install tmux if needed
+        run: command -v tmux || brew install tmux
+      - name: Exercise the event inbox and tmux routing
+        run: python3 -B -m unittest discover -s tests -v
+      - name: Build and exercise the native menu
+        run: |
+          ./scripts/build.sh
+          ./build/PaneBell.app/Contents/MacOS/PaneBell --self-test

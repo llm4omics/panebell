@@ -1,0 +1,8 @@
+{
+  "sshHost": "",
+  "terminal": "terminal",
+  "projects": [
+    {"name": "Paper Planes", "session": "sketchbook", "path": "~/Sandbox/paper-planes"},
+    {"name": "Lantern Atlas", "session": "sketchbook", "path": "~/Sandbox/lantern-atlas"}
+  ]
+}
