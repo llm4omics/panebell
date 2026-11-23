@@ -38,7 +38,7 @@ final class Menu: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 settings = try JSONDecoder().decode(Settings.self, from: Data(contentsOf: configURL))
                 validConfig = true
             } catch { problem = "Config: " + error.localizedDescription }
-            if let data = prefs.data(forKey: stateKey), let saved = try? JSONDecoder().decode(LocalState.self, from: data) {
+            if validConfig, let data = prefs.data(forKey: stateKey), let saved = try? JSONDecoder().decode(LocalState.self, from: data) {
                 state = saved
             }
             persist()

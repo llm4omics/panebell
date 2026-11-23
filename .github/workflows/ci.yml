@@ -8,10 +8,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
           persist-credentials: false
       - name: Check release inventory
-        run: python3 scripts/check_release.py HEAD --history
+        run: |
+          python3 scripts/check_release.py HEAD --history --write-zip build/PaneBell-source.zip
+          python3 scripts/check_release.py HEAD --verify-zip build/PaneBell-source.zip
       - name: Install tmux if needed
         run: command -v tmux || brew install tmux
       - name: Exercise the event inbox and tmux routing

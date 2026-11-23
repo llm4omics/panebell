@@ -36,14 +36,13 @@ Repeated delivery of the same completion is harmless. Closing a waiting pane hid
 
 See [configuration and integrations](docs/setup.md) for SSH, WezTerm, project launch commands, Codex completion notifications, automatic Claude Code permission reminders and working with other task runners.
 
-## Verify the checkout
+## Verify the local build
+
+Run these commands on the Mac from the extracted source directory.
 
 ```sh
-python3 -B -m unittest discover -s tests -v
-python3 scripts/check_release.py HEAD --history
-# On macOS:
 ./scripts/build.sh
 ./build/PaneBell.app/Contents/MacOS/PaneBell --self-test
 ```
 
-The tests use fictional projects and a separate tmux socket. The app is distributed as source; the local build uses an ad hoc signature. [MIT license](LICENSE)
+This source release builds an ad hoc signed application locally. [MIT license](LICENSE)

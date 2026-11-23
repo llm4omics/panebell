@@ -1,0 +1,7 @@
+/.gitattributes export-ignore
+/.github export-ignore
+/.gitignore export-ignore
+/AGENTS.md export-ignore
+/CONTRIBUTING.md export-ignore
+/scripts/check_release.py export-ignore
+/tests export-ignore
