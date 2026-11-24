@@ -177,7 +177,7 @@ a:hover { text-decoration: underline; }
 /* Simulated macOS Desktop Stage */
 .desktop-stage {
   position: relative;
-  min-height: 510px;
+  min-height: 540px;
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.16);
   background:
@@ -185,8 +185,14 @@ a:hover { text-decoration: underline; }
     radial-gradient(600px 380px at 84% 78%, rgba(217, 119, 6, 0.22), transparent 65%),
     linear-gradient(160deg, #101829 0%, #0d1320 52%, #131624 100%);
   box-shadow: 0 28px 70px rgba(0, 0, 0, 0.6);
-  overflow: hidden;
+  overflow: visible;
   user-select: none;
+}
+.mac-menubar {
+  border-radius: 13px 13px 0 0;
+}
+.stage-footer {
+  border-radius: 0 0 13px 13px;
 }
 
 /* macOS Menu Bar */
@@ -352,12 +358,18 @@ a:hover { text-decoration: underline; }
   z-index: 45;
 }
 .menu-row.open > .submenu { display: block; }
-@media (max-width: 620px) {
+@media (max-width: 920px) {
+  .pb-menu {
+    right: 10px;
+    width: min(300px, calc(100% - 20px));
+    max-height: 460px;
+    overflow-y: auto;
+  }
   .submenu {
     position: static;
     width: 100%;
     margin-top: 4px;
-    background: rgba(15, 18, 26, 0.75);
+    background: rgba(15, 18, 26, 0.82);
   }
   .menu-row.has-sub { flex-wrap: wrap; }
 }
@@ -1122,15 +1134,27 @@ footer {
       arrow.textContent = "▶";
       row.appendChild(arrow);
       row.appendChild(opts.submenu);
+      let hoveredOpen = false;
       const openExclusive = () => {
         Array.from(row.parentElement.children).forEach(sib => {
           if (sib !== row) sib.classList.remove("open");
         });
         row.classList.add("open");
       };
-      row.addEventListener("mouseenter", openExclusive);
+      row.addEventListener("pointerenter", (e) => {
+        if (e.pointerType === "mouse" && window.innerWidth > 920) {
+          hoveredOpen = !row.classList.contains("open");
+          openExclusive();
+        }
+      });
       row.addEventListener("click", (e) => {
         e.stopPropagation();
+        if (opts.submenu.contains(e.target)) return;
+        if (hoveredOpen) {
+          hoveredOpen = false;
+          openExclusive();
+          return;
+        }
         const wasOpen = row.classList.contains("open");
         Array.from(row.parentElement.children).forEach(sib => sib.classList.remove("open"));
         if (!wasOpen) row.classList.add("open");
