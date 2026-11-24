@@ -2,23 +2,65 @@ name: Verify PaneBell
 on: [push, pull_request]
 permissions:
   contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
-  test:
-    runs-on: macos-15
+  verify:
+    runs-on: ubuntu-latest
+    outputs:
+      native_changed: ${{ steps.scope.outputs.native_changed }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
           persist-credentials: false
       - name: Check release inventory
+        env:
+          EVENT_NAME: ${{ github.event_name }}
         run: |
-          python3 scripts/check_release.py HEAD --history --write-zip build/PaneBell-source.zip
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            python3 scripts/check_release.py HEAD --write-zip build/PaneBell-source.zip
+          else
+            python3 scripts/check_release.py HEAD --history --write-zip build/PaneBell-source.zip
+          fi
           python3 scripts/check_release.py HEAD --verify-zip build/PaneBell-source.zip
       - name: Install tmux if needed
-        run: command -v tmux || brew install tmux
+        run: command -v tmux || (sudo apt-get update -qq && sudo apt-get install -y -qq tmux)
       - name: Exercise the event inbox and tmux routing
         run: python3 -B -m unittest discover -s tests -v
+      - name: Check whether native macOS build is needed
+        id: scope
+        env:
+          REF_NAME: ${{ github.ref }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          python3 - <<'PY'
+          import os, subprocess
+          doc_only = {"README.md", "README.zh-CN.md", "CONTRIBUTING.md", "AGENTS.md", "LICENSE"}
+          ref = os.environ.get("REF_NAME", "")
+          base = os.environ.get("BASE_SHA", "")
+          need = True
+          if not ref.startswith("refs/tags/") and base and set(base) != {"0"}:
+              res = subprocess.run(["git", "diff", "--name-only", base, "HEAD"], capture_output=True, text=True)
+              if res.returncode == 0:
+                  changed = [p for p in res.stdout.splitlines() if p]
+                  if changed and all(p in doc_only or p.startswith("docs/") for p in changed):
+                      need = False
+          with open(os.environ["GITHUB_OUTPUT"], "a") as out:
+              out.write(f"native_changed={'true' if need else 'false'}\n")
+          PY
+
+  macos:
+    needs: verify
+    if: needs.verify.outputs.native_changed == 'true'
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
       - name: Build and exercise the native menu
         run: |
           ./scripts/build.sh
