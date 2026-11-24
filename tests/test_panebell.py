@@ -110,6 +110,9 @@ class WindowTests(unittest.TestCase):
         sub = self.a / "origami"
         sub.mkdir()
         pb.tmux("new-window","-d","-t","=sketch:","-c",str(sub))
+        for _ in range(100):
+            if {p["path"] for p in pb.panes() if p["session"] == "sketch"} >= {str(self.a), str(sub)}: break
+            time.sleep(.02)
         choices = self.open()["choices"]
         self.assertEqual({r["path"] for r in choices}, {str(sub), str(self.a)})
         chosen = self.open(choice=new["key"])["pane"]
