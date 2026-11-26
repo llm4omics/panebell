@@ -2,6 +2,30 @@
 
 The Mac reads `~/.config/panebell/config.json` when the app starts. A project has a display name, a tmux session name and an absolute or home-relative directory on the project host. Directory names may contain spaces. A missing directory produces an error. The private configuration is outside the checkout. [Fictional configuration](../examples/config.json)
 
+## Automated non-destructive setup (`--setup`)
+
+Run `./install.sh --setup` on the Mac (or `python3 ./panebell.py setup` anytime after installation) to configure PaneBell in one step without overwriting existing preferences:
+
+```sh
+# Preview planned changes without modifying any file:
+python3 ./panebell.py setup --dry-run
+
+# Local Mac setup (builds app, installs helper, imports active tmux directories, merges detected Claude/Codex configs):
+./install.sh --setup
+
+# Pair with a remote SSH host alias from ~/.ssh/config (deploys helper + merges remote Claude/Codex configs over SSH):
+./install.sh --setup --ssh-host studio-box
+
+# Configure only a Linux/SSH tmux host directly on that machine:
+./scripts/install-host.sh && python3 ./panebell.py setup --host-only
+```
+
+How `panebell.py setup` behaves:
+- **Active `tmux` discovery**: Queries live non-view `tmux` panes, skips bare `$HOME` and `/`, preserves every existing entry in `~/.config/panebell/config.json`, and appends newly discovered `(session, path)` pairs.
+- **Claude Code hooks (`~/.claude/settings.json`)**: When `~/.claude` or `claude` is detected (or `--claude` is passed; `--no-claude` skips), appends PaneBell's observe-only `claude-hook` entries for `PermissionRequest`, `PostToolUse`, `PostToolUseFailure`, `Stop`, and `SessionEnd` while keeping all existing hooks, matchers, and settings intact.
+- **Codex CLI callback (`~/.codex/config.toml`)**: When `~/.codex` (or `$CODEX_HOME`) or `codex` is detected (or `--codex` is passed; `--no-codex` skips), inserts a top-level `notify` array before the first `[table]` header. If a custom top-level `notify` array already exists, PaneBell wraps it via `codex-notify --forward '<json-argv>'` so your original notifier continues receiving every turn notification alongside PaneBell.
+- **Idempotency & backups**: Re-running `setup` produces zero duplicate entries. Before modifying an existing configuration file for the first time, `setup` saves an untouched copy in `~/.local/state/panebell/backups/`. Pass `--json` for machine-readable output.
+
 ## Remote project host
 
 1. Configure an SSH alias in your own SSH config. Check it with `ssh studio-box true`, replacing the fictional alias. Set up key authentication on the Mac.

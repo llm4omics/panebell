@@ -70,15 +70,36 @@ The demo runs entirely in memory and touches no server, `tmux` session, model ac
 | **Mac (menu bar client)** | macOS 13+, Xcode Command Line Tools (`swiftc`), Python 3.9+. Optional: WezTerm, Visual Studio Code |
 | **Project host (local Mac or SSH host)** | `tmux`, Python 3.9+, standard OpenSSH key authentication (when remote) |
 
-## Install and open a project
+## 30-second install & automated setup (recommended)
 
-1. Build and install the app locally, then launch it:
+### Option A: Paste into your AI coding agent (Claude Code, Codex CLI, etc.)
+
+Copy and send this prompt to an agent running on your Mac:
+
+> Install and configure PaneBell from `https://github.com/llm4omics/panebell.git` (clone into `~/Applications/panebell-src` if not already in a checkout). Read `README.md` and `docs/setup.md`: if I run `tmux` on a remote SSH host from `~/.ssh/config`, ask me which host alias to use and run `./install.sh --setup --ssh-host <alias>`; otherwise run `./install.sh --setup` for local `tmux`. This builds and self-tests `PaneBell.app`, installs `~/.local/lib/panebell/panebell.py`, scans active `tmux` panes into `~/.config/panebell/config.json` without overwriting existing entries, and losslessly merges Claude Code's observe-only `PermissionRequest` hooks (`~/.claude/settings.json`) and Codex CLI's `notify` callback (`~/.codex/config.toml`, chaining any existing notifier automatically). Finally launch `~/Applications/PaneBell.app` and summarize what was configured.
+
+### Option B: One-line setup wizard
+
+From a checkout on macOS, run one command to build `PaneBell.app`, install the host helper, import active `tmux` directories into `~/.config/panebell/config.json`, and losslessly merge detected Claude Code and Codex CLI configurations (preview first anytime with `python3 ./panebell.py setup --dry-run`):
+
+```sh
+# Local Mac tmux workflow:
+./install.sh --setup && open "$HOME/Applications/PaneBell.app"
+
+# Or pair with an ~/.ssh/config host alias (deploys helper + merges remote Claude/Codex settings over SSH):
+./install.sh --setup --ssh-host studio-box && open "$HOME/Applications/PaneBell.app"
+```
+
+macOS may ask permission to display notifications and control `Terminal.app`. Existing `config.json` entries, Claude hooks, and custom Codex `notify` programs are preserved (untouched pre-setup backups are saved in `~/.local/state/panebell/backups/`). Pass `--claude` or `--codex` to pre-create hooks before first launching those tools.
+
+### Manual step-by-step install
+
+1. Build and install only the menu bar app (without scanning `tmux` or touching agent configs):
    ```sh
    ./install.sh
    open "$HOME/Applications/PaneBell.app"
    ```
-   macOS may ask permission to display notifications and control `Terminal.app`.
-2. Active `tmux` panes appear immediately under **Live windows**. To add saved projects, click **Open settings…**, edit `~/.config/panebell/config.json` (first install creates an empty project list), and relaunch PaneBell. See [example settings](examples/config.json).
+2. Active `tmux` panes appear immediately under **Live windows**. To edit saved projects manually, click **Open settings…**, edit `~/.config/panebell/config.json` (see [example settings](examples/config.json)), and relaunch PaneBell.
 3. Open any entry under **Projects**:
    - Saved projects match their directory (including subdirectories).
    - Live windows follow their exact pane identity even after `cd`.
@@ -86,10 +107,11 @@ The demo runs entirely in memory and touches no server, `tmux` session, model ac
 
 ## Send waiting prompts and completion receipts
 
-Install the single-file helper on your project host:
+If you did not run `--setup`, install the single-file helper on your project host (and optionally merge Claude/Codex configs on that host):
 
 ```sh
 ./scripts/install-host.sh
+python3 ./panebell.py setup --host-only   # optional: losslessly merge Claude Code / Codex configs on a Linux host
 ```
 
 Inside a `tmux` pane on the host, try the interactive fictional task:
@@ -122,8 +144,8 @@ See **[Settings and integrations](docs/setup.md)** for full setup guides:
 - **Remote SSH hosts** — Connect over an `~/.ssh/config` host alias with interactive key-unlock retry.
 - **WezTerm & deliberate focus tracking** — Use WezTerm as your project terminal and optionally load [`examples/wezterm-focus.lua`](examples/wezterm-focus.lua).
 - **Custom launch recipes** — Start specific sessions/directories with a custom command via `~/.config/panebell/recipes.json`.
-- **Claude Code permission reminders** — Merge [`examples/claude-hooks.json`](examples/claude-hooks.json) to surface `PermissionRequest` prompts in the menu bar and auto-clear them on resolution.
-- **Codex CLI completion receipts** — Connect `codex-notify` to capture durable `agent-turn-complete` summaries.
+- **Claude Code permission reminders** — Configured automatically by `./install.sh --setup`, or merge [`examples/claude-hooks.json`](examples/claude-hooks.json) manually to surface `PermissionRequest` prompts in the menu bar and auto-clear them on resolution.
+- **Codex CLI completion receipts** — Configured automatically by `./install.sh --setup` (chaining any existing notifier via `--forward`), or point `notify` at `codex-notify` manually to capture durable `agent-turn-complete` summaries.
 
 ## Verify the local build
 

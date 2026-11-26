@@ -34,20 +34,43 @@
 
 点击菜单栏 **PaneBell Demo · 1 → Waiting for you → Paper Planes**，在弹出的演示窗口点击 **Allow check** 并关闭窗口，再打开 **Unread completions** 查看持久化未读结果。演示完全在内存中运行，不需要远程主机、`tmux` 会话、SSH 密钥或模型账号。
 
-## 安装与日常使用
+## 30 秒安装与自动配置（推荐）
 
 **环境要求**：Mac 端需 macOS 13+、Xcode Command Line Tools 与 Python 3.9+（可选 WezTerm、VS Code）；项目所在机器（本机或远程 Linux/macOS）需 `tmux` 与 Python 3.9+。
 
-1. **安装菜单栏应用**：
+### 方式一：发给你的 AI 编程助手自动完成（Claude Code / Codex 等）
+
+把下面这段引导词直接复制发给正在 Mac 上运行的终端 Agent：
+
+> 请帮我安装并配置 PaneBell（仓库：`https://github.com/llm4omics/panebell.git`，若当前不在仓库目录请先克隆到 `~/Applications/panebell-src`）。先阅读 `README.zh-CN.md` 与 `docs/setup.md`：若我通过 `~/.ssh/config` 连接远程 SSH 主机跑 `tmux`，请先确认主机别名并运行 `./install.sh --setup --ssh-host <别名>`；若仅在本机使用 `tmux`，直接运行 `./install.sh --setup`。该命令会自动编译自检 `PaneBell.app`、安装 `~/.local/lib/panebell/panebell.py`、扫描当前活跃 `tmux` 会话生成或补充 `~/.config/panebell/config.json`（保留已有配置），并无损合并 Claude Code 的 `PermissionRequest` 观察钩子（`~/.claude/settings.json`）与 Codex CLI 的 `notify` 完成回调（`~/.codex/config.toml`，已有通知器会自动串联保留）。最后启动 `~/Applications/PaneBell.app` 并汇报配置摘要。
+
+### 方式二：命令行一键向导
+
+克隆仓库后在项目根目录执行一行命令，即可在 30 秒内完成应用编译、助手部署、活跃 `tmux` 会话导入以及 Claude Code / Codex 配置无损合并（执行前可先跑 `python3 ./panebell.py setup --dry-run` 预览变更）：
+
+```sh
+# 仅在本机 Mac 运行 tmux：
+./install.sh --setup && open "$HOME/Applications/PaneBell.app"
+
+# 或配对远程 SSH 主机别名（对应 ~/.ssh/config 中的 Host 别名，如 studio-box）：
+./install.sh --setup --ssh-host studio-box && open "$HOME/Applications/PaneBell.app"
+```
+
+向导会自动跳过裸 `$HOME` 与根目录窗格、保留已有项目配置，并在 `~/.local/state/panebell/backups/` 保存修改前的原始配置备份（未检测到 `~/.claude` 或 `~/.codex` 时默认跳过，可追加 `--claude` / `--codex` 显式写入）。
+
+### 分步手工安装与自定义事件上报
+
+1. **仅编译安装菜单栏应用（不自动扫描或改写 Agent 配置）**：
    ```sh
    ./install.sh
    open "$HOME/Applications/PaneBell.app"
    ```
-   首次安装会生成空的个人配置 `~/.config/panebell/config.json`（留在仓库之外，参考 [虚构配置示例](examples/config.json)）。已有窗格会立即显示在 **Live windows**；如需保存常用项目入口，点击菜单 **Open settings…** 填入项目名、`tmux` 会话名和工作目录后重启应用即可。
-2. **在项目主机安装助手并发送事件**：
+   首次安装会生成空的个人配置 `~/.config/panebell/config.json`（留在仓库之外，参考 [虚构配置示例](examples/config.json)）。已有窗格会立即显示在 **Live windows**；也可点击菜单 **Open settings…** 手动维护项目列表。
+2. **单独在项目主机安装助手并发送自定义事件**：
    ```sh
    ./scripts/install-host.sh
-   sh examples/sample-task.sh   # 在 tmux 窗格中试跑交互式虚构示例
+   python3 ./panebell.py setup --host-only   # 可选：仅在远程主机无损合并 Claude Code / Codex 配置
+   sh examples/sample-task.sh                # 在 tmux 窗格中试跑交互式虚构示例
    ```
    在自有脚本或工作流中，为每次运行分配稳定 ID 即可上报状态流转：
    ```sh
